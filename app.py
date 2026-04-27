@@ -8,12 +8,14 @@ from google.auth.transport.requests import Request
 
 # --- 1. 설정 정보 ---
 BLOG_ID = '8075636289883732328'
-# GitHub에 올린 파일명과 동일하게 'client_secret.json'으로 설정
 JSON_FILE = 'client_secret.json' 
 GEMINI_API_KEY = "AIzaSyAw7YnMqZS4ObAVaO8b3yMFCcY3No_r1ik"
 
+# 수정된 부분: API 키 변수를 직접 넣거나 따옴표로 감싸야 합니다.
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+
+# 수정된 부분: 404 에러 방지를 위해 모델명을 더 정확하게 지정합니다.
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 # --- 2. Blogger API 인증 함수 ---
 def get_blogger_service():
@@ -25,6 +27,7 @@ def get_blogger_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            # 로컬 실행 시 브라우저를 열어 인증을 진행합니다.
             flow = InstalledAppFlow.from_client_secrets_file(JSON_FILE, ['https://www.googleapis.com/auth/blogger'])
             creds = flow.run_local_server(port=0)
         with open('token.pickle', 'wb') as token:
@@ -43,16 +46,17 @@ if st.button("Generate & Post (AI Illustration Included)"):
     else:
         with st.spinner("Gemini 3가 독창적인 AI 이미지와 글을 생성 중입니다..."):
             try:
-                # 직접 그린 듯한 '일러스트' 스타일을 강조한 프롬프트
+                # 직접 그린 듯한 '일러스트' 스타일 프롬프트
                 prompt = f"""
                 Write a professional blog post in American English about '{keyword}'.
                 
                 Requirements:
                 - Length: 1,500+ words.
                 - Format: HTML tags (<h2>, <h3>, <p>, <ul>).
-                - **Custom Image**: Insert this HTML tag after the first paragraph to represent a unique AI-generated illustration:
-                  <img src="https://pollinations.ai/p/a_high_quality_digital_art_illustration_of_{keyword.replace(' ', '_')}_concept_art_highly_detailed_trending_on_artstation" alt="{keyword}" style="width:100%; max-width:800px; border-radius:15px; margin:25px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                - Tone: Informative and authoritative for a US audience.
+                - **Custom Image**:
+                  <img src="https://pollinations.ai/p/a_high_quality_digital_art_illustration_of_{keyword.replace(' ', '_')}_concept_art_highly_detailed" alt="{keyword}" style="width:100%; max-width:800px; border-radius:15px; margin:25px 0;">
+                
+                Provide only the HTML body content.
                 """
                 
                 response = model.generate_content(prompt)
@@ -67,7 +71,7 @@ if st.button("Generate & Post (AI Illustration Included)"):
                 }
                 
                 post = service.posts().insert(blogId=BLOG_ID, body=post_body).execute()
-                st.success("🎉 직접 그린 듯한 AI 이미지가 포함된 포스팅이 완료되었습니다!")
+                st.success("🎉 포스팅 성공!")
                 st.write(f"**URL:** [확인하기]({post.get('url')})")
                 st.balloons()
                 
