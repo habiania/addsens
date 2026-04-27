@@ -14,10 +14,7 @@ BLOG_ID = '8075636289883732328'
 JSON_FILE = 'client_secret.json' 
 GEMINI_API_KEY = "AIzaSyAw7YnMqZS4ObAVaO8b3yMFCcY3No_r1ik"
 
-# API 설정
 genai.configure(api_key=GEMINI_API_KEY)
-
-# [에러 해결 핵심] 모델명을 최신 표준인 'gemini-1.5-flash' 또는 'models/gemini-1.5-flash'로 시도합니다.
 try:
     model = genai.GenerativeModel('gemini-1.5-flash')
 except:
@@ -40,69 +37,73 @@ def get_blogger_service():
     return build('blogger', 'v3', credentials=creds)
 
 # --- 3. UI 구성 ---
-st.set_page_config(page_title="Human-Like AdSense Bot", layout="wide")
-st.title("✍️ Human-Like AdSense Approval Automation")
-st.info("AI 흔적을 지운 2,500자 포스팅 5개를 2시간 간격으로 예약 발행합니다.")
+st.set_page_config(page_title="EEAT Optimized Bot", layout="wide")
+st.title("🛡️ EEAT-Optimized AdSense Pilot")
+st.info("최신 구글 알고리즘(EEAT)에 맞춰 '경험과 신뢰'가 강조된 2,500자 포스팅 5개를 예약합니다.")
 
-keyword = st.text_input("메인 키워드 입력", placeholder="예: High-yield savings accounts in 2026")
+keyword = st.text_input("메인 키워드 입력", placeholder="예: Best budget-friendly travel destinations 2026")
 
-if st.button("AI 흔적 제거 포스팅 5개 예약 시작"):
+if st.button("EEAT 최적화 포스팅 5개 예약 시작"):
     if not keyword:
         st.error("키워드를 입력해주세요.")
     else:
         service = get_blogger_service()
         progress_bar = st.progress(0)
         
-        # 각각 다른 스타일로 AI 패턴 파괴
+        # 각각 다른 스타일로 '전문성' 강조
         styles = [
-            "In-depth Beginner's Guide",
-            "Advanced Strategies & Analysis",
-            "Personal Case Study & Results",
-            "Common Pitfalls to Avoid",
-            "Comparison & Ultimate Verdict"
+            "In-depth Expert Review (Experience-based)",
+            "A-to-Z Ultimate Roadmap (Authoritative)",
+            "What Most People Get Wrong (Insightful)",
+            "Step-by-Step Practical Implementation (Helpful)",
+            "Future Predictions & Expert Analysis (Trustworthy)"
         ]
 
         for i, style in enumerate(styles):
-            with st.spinner(f"[{i+1}/5] '{style}' 스타일 글 작성 및 예약 중..."):
+            with st.spinner(f"[{i+1}/5] '{style}' 스타일로 EEAT 최적화 중..."):
                 try:
-                    # AI 흔적 제거용 강화 프롬프트
+                    # 최신 승인 조건 반영 프롬프트
                     prompt = f"""
                     Write a 2,500+ word blog post in American English. 
                     Topic: '{keyword}' / Style: {style}
 
-                    [HUMAN-LIKE INSTRUCTIONS]:
-                    1. NO AI CLICHES: Avoid "In the fast-paced world," "In conclusion," "Unlocking the potential."
-                    2. TONE: Conversational, slightly opinionated, and highly practical. Use "I" and "You."
-                    3. CONTENT: Include a "Real-World Example" and a "My Honest Opinion" section.
-                    4. FORMAT: Use HTML (H2, H3, P, B, UL, LI). Make it look like a manual post.
-                    5. IMAGE: <img src="https://pollinations.ai/p/a_realistic_lifestyle_photo_of_{keyword.replace(' ', '_')}_concept" style="width:100%; max-width:800px; border-radius:10px; margin:20px 0;">
+                    [AD-SENSE EEAT COMPLIANCE]:
+                    1. EXPERIENCE: Start with a first-person narrative ("I've tested...", "In my years of experience...").
+                    2. EXPERTISE: Use specific terminology, data-driven facts, and provide deep technical insights.
+                    3. AUTHORITATIVENESS: Include a "Key Takeaways" summary and "Pros/Cons" based on real usage.
+                    4. TRUSTWORTHINESS: Add a "Frequently Asked Questions" section and cite general industry standards.
+                    
+                    [FORMATTING]:
+                    - Use SEO-friendly HTML: H2, H3, P, B, UL, LI. 
+                    - NO AI cliches. Keep sentences varied and engaging.
+                    - IMAGE: <img src="https://pollinations.ai/p/a_professional_high_quality_photo_of_{keyword.replace(' ', '_')}_lifestyle" style="width:100%; max-width:800px; border-radius:12px; margin:20px 0;">
 
-                    Provide only the HTML body content.
+                    Respond ONLY with the HTML body content.
                     """
                     
                     response = model.generate_content(prompt)
                     content_html = response.text
                     
-                    # 2시간 간격 + 랜덤 분(사람처럼 보이게)
-                    random_min = random.randint(3, 18)
+                    # 2시간 간격 + 랜덤 분 설정
+                    random_min = random.randint(5, 25)
                     publish_time = (datetime.utcnow() + timedelta(hours=(i+1)*2, minutes=random_min)).isoformat() + "Z"
                     
                     post_body = {
                         'kind': 'blogger#post',
-                        'title': f"{keyword}: {style}",
+                        'title': f"{keyword}: {style} (Guide 2026)",
                         'content': content_html,
                         'published': publish_time,
-                        'labels': ['Finance', 'Expert Review']
+                        'labels': ['Expert Guide', 'Lifestyle']
                     }
                     
                     service.posts().insert(blogId=BLOG_ID, body=post_body).execute()
                     
-                    st.write(f"✅ {i+1}번 완료: (예약 시간: {publish_time})")
+                    st.write(f"✅ {i+1}번 예약 완료: {style}")
                     progress_bar.progress((i+1) * 20)
-                    time.sleep(5) # API 안정성 확보
+                    time.sleep(4)
                     
                 except Exception as e:
                     st.error(f"❌ {i+1}번째 글 오류: {e}")
         
-        st.success("🎉 모든 예약 발행이 완료되었습니다!")
+        st.success("🎉 EEAT 최적화 포스팅 5개가 모두 예약되었습니다!")
         st.balloons()
