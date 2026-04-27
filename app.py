@@ -17,13 +17,11 @@ GEMINI_API_KEY = "AIzaSyAw7YnMqZS4ObAVaO8b3yMFCcY3No_r1ik"
 # API 설정
 genai.configure(api_key=GEMINI_API_KEY)
 
-# [404 에러 해결] 가장 확실한 모델 호출 방식
+# [404 에러 끝장내기] 모델 경로를 명시적으로 'models/gemini-1.5-flash'로 지정합니다.
 try:
-    # 2026 표준 방식: v1beta를 명시하지 않고 모델명만 입력
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
 except Exception:
-    # 혹시 모를 대체 명칭
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
 
 # --- 2. Blogger API 인증 함수 ---
 def get_blogger_service():
@@ -43,10 +41,10 @@ def get_blogger_service():
 
 # --- 3. UI 구성 ---
 st.set_page_config(page_title="EEAT Optimized Bot", layout="wide")
-st.title("🛡️ EEAT-Optimized AdSense Pilot")
-st.info("404 에러가 해결된 최신 버전입니다. 2,500자 포스팅 5개를 예약합니다.")
+st.title("🛡️ EEAT-Optimized AdSense Pilot (v2.1)")
+st.info("모델명 404 에러를 수정한 최종 버전입니다. 2,500자 포스팅 5개를 예약합니다.")
 
-keyword = st.text_input("메인 키워드 입력", placeholder="예: Best digital marketing trends in 2026")
+keyword = st.text_input("메인 키워드 입력", placeholder="예: Future of AI in E-commerce 2026")
 
 if st.button("EEAT 최적화 포스팅 5개 예약 시작"):
     if not keyword:
@@ -66,50 +64,47 @@ if st.button("EEAT 최적화 포스팅 5개 예약 시작"):
         for i, style in enumerate(styles):
             with st.spinner(f"[{i+1}/5] '{style}' 스타일로 글 생성 중..."):
                 try:
-                    # 프롬프트 구성 (인간미 + EEAT)
+                    # 프롬프트 구성 (최신 애드센스 승인 조건 반영)
                     prompt = f"""
-                    Write a 2,500+ word blog post in American English. 
+                    Write an extensive, human-like SEO blog post in American English.
                     Topic: '{keyword}' / Style: {style}
-
-                    [AD-SENSE EEAT COMPLIANCE]:
-                    1. EXPERIENCE: Start with a personal story or a relatable scenario.
-                    2. EXPERTISE: Use high-level vocabulary and specific data.
-                    3. TRUST: Include an FAQ section and a clear conclusion.
                     
-                    [FORMATTING]:
-                    - Use SEO HTML tags (H2, H3, P, B, UL, LI).
-                    - IMAGE: <img src="https://pollinations.ai/p/a_professional_photo_of_{keyword.replace(' ', '_')}_{i}" style="width:100%; max-width:800px; border-radius:12px; margin:20px 0;">
-
-                    Provide ONLY HTML body content.
+                    Instructions:
+                    - Word count: 2,500+ words.
+                    - Tone: Professional yet conversational (EEAT focused).
+                    - Content: Include a personal anecdote, statistical data, and a final expert verdict.
+                    - Format: Clean HTML (H2, H3, P, B, UL, LI).
+                    - Image: <img src="https://pollinations.ai/p/a_realistic_professional_illustration_of_{keyword.replace(' ', '_')}_{i}" style="width:100%; max-width:800px; border-radius:12px; margin:20px 0;">
+                    
+                    Respond ONLY with the HTML body content.
                     """
                     
                     response = model.generate_content(prompt)
-                    # 여기서 response.text가 비어있는지 확인하는 안전장치 추가
-                    if not response.text:
-                        raise ValueError("Gemini가 내용을 생성하지 못했습니다.")
-                        
                     content_html = response.text
                     
+                    if not content_html:
+                        raise ValueError("Gemini가 내용을 생성하지 못했습니다.")
+                    
                     # 예약 시간 설정 (2시간 간격 + 랜덤 분)
-                    random_min = random.randint(5, 20)
+                    random_min = random.randint(3, 15)
                     publish_time = (datetime.utcnow() + timedelta(hours=(i+1)*2, minutes=random_min)).isoformat() + "Z"
                     
                     post_body = {
                         'kind': 'blogger#post',
-                        'title': f"{keyword}: {style} (Expert Guide 2026)",
+                        'title': f"{keyword}: {style} (2026 Edition)",
                         'content': content_html,
                         'published': publish_time,
-                        'labels': ['Expert Guide', 'SEO']
+                        'labels': ['Expert Series', 'SEO Strategy']
                     }
                     
                     service.posts().insert(blogId=BLOG_ID, body=post_body).execute()
                     
-                    st.write(f"✅ {i+1}번 예약 완료: {style}")
+                    st.write(f"✅ {i+1}번 예약 성공: {style}")
                     progress_bar.progress((i+1) * 20)
-                    time.sleep(5)
+                    time.sleep(3) # API 제한 준수
                     
                 except Exception as e:
                     st.error(f"❌ {i+1}번째 글 오류: {e}")
         
-        st.success("🎉 모든 에러가 해결되어 5개의 글이 정상적으로 예약되었습니다!")
+        st.success("🎉 모든 프로세스가 완료되었습니다! 블로그에서 확인하세요.")
         st.balloons()
